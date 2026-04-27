@@ -2,6 +2,7 @@ using AutoServiceManager.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using AutoServiceManager.Api.Services;
 using AutoServiceManager.Api.Services.Interfaces;
+using AutoServiceManager.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +27,18 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = string.Empty;
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoServiceManager.Api v1");
+    });
 }
 
 app.UseHttpsRedirection();
