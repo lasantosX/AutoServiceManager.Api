@@ -4,6 +4,7 @@ using AutoServiceManager.Api.Entities;
 using AutoServiceManager.Api.Enums;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Services;
 
@@ -16,12 +17,40 @@ public class OperationService : IOperationService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<OperationDto>> GetByServiceOrderIdAsync(int serviceOrderId)
+    public async Task<PagedResult<OperationDto>> GetByServiceOrderIdAsync(
+    int serviceOrderId,
+    OperationPagedRequest request)
     {
-        return await _dbContext.ServiceOrderOperations
+        var query = _dbContext.ServiceOrderOperations
             .AsNoTracking()
             .Where(operation => operation.ServiceOrderId == serviceOrderId)
+            .AsQueryable();
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(operation => operation.Status == request.Status.Value);
+        }
+
+        if (request.TechnicianId.HasValue)
+        {
+            query = query.Where(operation => operation.TechnicianId == request.TechnicianId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.Trim();
+
+            query = query.Where(operation =>
+                operation.OpCode.Contains(searchTerm) ||
+                operation.Description.Contains(searchTerm));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(operation => operation.OpCode)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(operation => new OperationDto
             {
                 ServiceOrderOperationId = operation.ServiceOrderOperationId,
@@ -35,6 +64,14 @@ public class OperationService : IOperationService
                 Status = operation.Status
             })
             .ToListAsync();
+
+        return new PagedResult<OperationDto>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<OperationDto?> GetByIdAsync(int id)

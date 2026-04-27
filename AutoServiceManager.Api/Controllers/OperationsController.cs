@@ -1,6 +1,7 @@
 ﻿using AutoServiceManager.Api.DTOs.Operations;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Controllers;
 
@@ -16,9 +17,11 @@ public class OperationsController : ControllerBase
     }
 
     [HttpGet("service-orders/{serviceOrderId:int}/operations")]
-    public async Task<ActionResult<IEnumerable<OperationDto>>> GetByServiceOrderId(int serviceOrderId)
+    public async Task<ActionResult<PagedResult<OperationDto>>> GetByServiceOrderId(
+        int serviceOrderId,
+        [FromQuery] OperationPagedRequest request)
     {
-        var operations = await _operationService.GetByServiceOrderIdAsync(serviceOrderId);
+        var operations = await _operationService.GetByServiceOrderIdAsync(serviceOrderId, request);
 
         return Ok(operations);
     }
