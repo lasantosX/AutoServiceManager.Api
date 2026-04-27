@@ -1,10 +1,13 @@
-﻿using AutoServiceManager.Api.DTOs.Operations;
+﻿using AutoServiceManager.Api.Common;
+using AutoServiceManager.Api.DTOs.Operations;
 
 namespace AutoServiceManager.Api.Services.Interfaces;
 
 public interface IOperationService
 {
-    Task<IEnumerable<OperationDto>> GetByServiceOrderIdAsync(int serviceOrderId);
+    Task<PagedResult<OperationDto>> GetByServiceOrderIdAsync(
+        int serviceOrderId,
+        OperationPagedRequest request);
 
     Task<OperationDto?> GetByIdAsync(int id);
 
