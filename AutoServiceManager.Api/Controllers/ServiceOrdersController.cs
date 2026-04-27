@@ -1,6 +1,7 @@
 ﻿using AutoServiceManager.Api.DTOs.ServiceOrders;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Controllers;
 
@@ -16,9 +17,10 @@ public class ServiceOrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ServiceOrderDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<ServiceOrderDto>>> GetAll(
+        [FromQuery] ServiceOrderPagedRequest request)
     {
-        var serviceOrders = await _serviceOrderService.GetAllAsync();
+        var serviceOrders = await _serviceOrderService.GetAllAsync(request);
 
         return Ok(serviceOrders);
     }
