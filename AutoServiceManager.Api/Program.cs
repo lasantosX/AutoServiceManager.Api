@@ -17,6 +17,8 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddScoped<ITechnicianService, TechnicianService>();
 
+builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
