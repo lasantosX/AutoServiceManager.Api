@@ -3,6 +3,7 @@ using AutoServiceManager.Api.DTOs.Vehicles;
 using AutoServiceManager.Api.Entities;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Services;
 
@@ -15,13 +16,32 @@ public class VehicleService : IVehicleService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<VehicleDto>> GetByCustomerIdAsync(int customerId)
+    public async Task<PagedResult<VehicleDto>> GetByCustomerIdAsync(int customerId, PagedRequest request)
     {
-        return await _dbContext.Vehicles
+        var query = _dbContext.Vehicles
             .AsNoTracking()
             .Where(vehicle => vehicle.CustomerId == customerId)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.Trim();
+
+            query = query.Where(vehicle =>
+                vehicle.VIN.Contains(searchTerm) ||
+                vehicle.Make.Contains(searchTerm) ||
+                vehicle.Model.Contains(searchTerm) ||
+                (vehicle.PlateNumber != null && vehicle.PlateNumber.Contains(searchTerm)) ||
+                (vehicle.UnitNumber != null && vehicle.UnitNumber.Contains(searchTerm)));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(vehicle => vehicle.Make)
             .ThenBy(vehicle => vehicle.Model)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(vehicle => new VehicleDto
             {
                 VehicleId = vehicle.VehicleId,
@@ -34,6 +54,14 @@ public class VehicleService : IVehicleService
                 UnitNumber = vehicle.UnitNumber
             })
             .ToListAsync();
+
+        return new PagedResult<VehicleDto>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<VehicleDto?> GetByIdAsync(int id)

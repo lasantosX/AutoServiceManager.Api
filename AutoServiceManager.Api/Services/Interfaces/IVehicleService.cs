@@ -1,10 +1,11 @@
-﻿using AutoServiceManager.Api.DTOs.Vehicles;
+﻿using AutoServiceManager.Api.Common;
+using AutoServiceManager.Api.DTOs.Vehicles;
 
 namespace AutoServiceManager.Api.Services.Interfaces;
 
 public interface IVehicleService
 {
-    Task<IEnumerable<VehicleDto>> GetByCustomerIdAsync(int customerId);
+    Task<PagedResult<VehicleDto>> GetByCustomerIdAsync(int customerId, PagedRequest request);
 
     Task<VehicleDto?> GetByIdAsync(int id);
 
