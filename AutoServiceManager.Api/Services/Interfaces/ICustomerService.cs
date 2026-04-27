@@ -1,10 +1,11 @@
-﻿using AutoServiceManager.Api.DTOs.Customers;
+﻿using AutoServiceManager.Api.Common;
+using AutoServiceManager.Api.DTOs.Customers;
 
 namespace AutoServiceManager.Api.Services.Interfaces;
 
 public interface ICustomerService
 {
-    Task<IEnumerable<CustomerDto>> GetAllAsync();
+    Task<PagedResult<CustomerDto>> GetAllAsync(PagedRequest request);
 
     Task<CustomerDto?> GetByIdAsync(int id);
 
