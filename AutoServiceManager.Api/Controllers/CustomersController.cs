@@ -1,6 +1,7 @@
 ﻿using AutoServiceManager.Api.DTOs.Customers;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Controllers;
 
@@ -16,9 +17,9 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<CustomerDto>>> GetAll([FromQuery] PagedRequest request)
     {
-        var customers = await _customerService.GetAllAsync();
+        var customers = await _customerService.GetAllAsync(request);
 
         return Ok(customers);
     }

@@ -3,6 +3,7 @@ using AutoServiceManager.Api.DTOs.Customers;
 using AutoServiceManager.Api.Entities;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Services;
 
@@ -15,12 +16,30 @@ public class CustomerService : ICustomerService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<CustomerDto>> GetAllAsync()
+    public async Task<PagedResult<CustomerDto>> GetAllAsync(PagedRequest request)
     {
-        return await _dbContext.Customers
+        var query = _dbContext.Customers
             .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.Trim();
+
+            query = query.Where(customer =>
+                customer.FirstName.Contains(searchTerm) ||
+                customer.LastName.Contains(searchTerm) ||
+                (customer.Email != null && customer.Email.Contains(searchTerm)) ||
+                (customer.Phone != null && customer.Phone.Contains(searchTerm)));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(customer => customer.LastName)
             .ThenBy(customer => customer.FirstName)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(customer => new CustomerDto
             {
                 CustomerId = customer.CustomerId,
@@ -30,6 +49,14 @@ public class CustomerService : ICustomerService
                 Phone = customer.Phone
             })
             .ToListAsync();
+
+        return new PagedResult<CustomerDto>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<CustomerDto?> GetByIdAsync(int id)
