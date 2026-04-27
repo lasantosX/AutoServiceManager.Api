@@ -3,6 +3,7 @@ using AutoServiceManager.Api.DTOs.Technicians;
 using AutoServiceManager.Api.Entities;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Services;
 
@@ -15,11 +16,27 @@ public class TechnicianService : ITechnicianService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<TechnicianDto>> GetAllAsync()
+    public async Task<PagedResult<TechnicianDto>> GetAllAsync(PagedRequest request)
     {
-        return await _dbContext.Technicians
+        var query = _dbContext.Technicians
             .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.Trim();
+
+            query = query.Where(technician =>
+                technician.FullName.Contains(searchTerm) ||
+                (technician.Email != null && technician.Email.Contains(searchTerm)));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderBy(technician => technician.FullName)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(technician => new TechnicianDto
             {
                 TechnicianId = technician.TechnicianId,
@@ -28,6 +45,14 @@ public class TechnicianService : ITechnicianService
                 IsActive = technician.IsActive
             })
             .ToListAsync();
+
+        return new PagedResult<TechnicianDto>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<TechnicianDto?> GetByIdAsync(int id)
