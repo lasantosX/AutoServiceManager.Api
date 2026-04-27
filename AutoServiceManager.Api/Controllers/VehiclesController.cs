@@ -1,6 +1,7 @@
 ﻿using AutoServiceManager.Api.DTOs.Vehicles;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Controllers;
 
@@ -16,9 +17,11 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("customers/{customerId:int}/vehicles")]
-    public async Task<ActionResult<IEnumerable<VehicleDto>>> GetByCustomerId(int customerId)
+    public async Task<ActionResult<PagedResult<VehicleDto>>> GetByCustomerId(
+    int customerId,
+    [FromQuery] PagedRequest request)
     {
-        var vehicles = await _vehicleService.GetByCustomerIdAsync(customerId);
+        var vehicles = await _vehicleService.GetByCustomerIdAsync(customerId, request);
 
         return Ok(vehicles);
     }
