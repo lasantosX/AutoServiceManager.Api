@@ -1,10 +1,11 @@
-﻿using AutoServiceManager.Api.DTOs.ServiceOrders;
+﻿using AutoServiceManager.Api.Common;
+using AutoServiceManager.Api.DTOs.ServiceOrders;
 
 namespace AutoServiceManager.Api.Services.Interfaces;
 
 public interface IServiceOrderService
 {
-    Task<IEnumerable<ServiceOrderDto>> GetAllAsync();
+    Task<PagedResult<ServiceOrderDto>> GetAllAsync(ServiceOrderPagedRequest request);
 
     Task<ServiceOrderDto?> GetByIdAsync(int id);
 

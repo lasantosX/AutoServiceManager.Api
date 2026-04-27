@@ -4,6 +4,7 @@ using AutoServiceManager.Api.Entities;
 using AutoServiceManager.Api.Enums;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Services;
 
@@ -16,11 +17,36 @@ public class ServiceOrderService : IServiceOrderService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<ServiceOrderDto>> GetAllAsync()
+    public async Task<PagedResult<ServiceOrderDto>> GetAllAsync(ServiceOrderPagedRequest request)
     {
-        return await _dbContext.ServiceOrders
+        var query = _dbContext.ServiceOrders
             .AsNoTracking()
+            .AsQueryable();
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(serviceOrder => serviceOrder.Status == request.Status.Value);
+        }
+
+        if (request.VehicleId.HasValue)
+        {
+            query = query.Where(serviceOrder => serviceOrder.VehicleId == request.VehicleId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.Trim();
+
+            query = query.Where(serviceOrder =>
+                serviceOrder.OrderNumber.Contains(searchTerm));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(serviceOrder => serviceOrder.OpenedAtUtc)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(serviceOrder => new ServiceOrderDto
             {
                 ServiceOrderId = serviceOrder.ServiceOrderId,
@@ -34,6 +60,14 @@ public class ServiceOrderService : IServiceOrderService
                 TotalAmount = serviceOrder.TotalAmount
             })
             .ToListAsync();
+
+        return new PagedResult<ServiceOrderDto>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<ServiceOrderDto?> GetByIdAsync(int id)
