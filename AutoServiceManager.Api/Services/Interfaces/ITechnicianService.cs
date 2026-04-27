@@ -1,10 +1,11 @@
-﻿using AutoServiceManager.Api.DTOs.Technicians;
+﻿using AutoServiceManager.Api.Common;
+using AutoServiceManager.Api.DTOs.Technicians;
 
 namespace AutoServiceManager.Api.Services.Interfaces;
 
 public interface ITechnicianService
 {
-    Task<IEnumerable<TechnicianDto>> GetAllAsync();
+    Task<PagedResult<TechnicianDto>> GetAllAsync(PagedRequest request);
 
     Task<TechnicianDto?> GetByIdAsync(int id);
 

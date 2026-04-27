@@ -1,6 +1,7 @@
 ﻿using AutoServiceManager.Api.DTOs.Technicians;
 using AutoServiceManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using AutoServiceManager.Api.Common;
 
 namespace AutoServiceManager.Api.Controllers;
 
@@ -16,9 +17,9 @@ public class TechniciansController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TechnicianDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<TechnicianDto>>> GetAll([FromQuery] PagedRequest request)
     {
-        var technicians = await _technicianService.GetAllAsync();
+        var technicians = await _technicianService.GetAllAsync(request);
 
         return Ok(technicians);
     }
