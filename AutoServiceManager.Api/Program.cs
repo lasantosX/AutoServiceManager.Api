@@ -1,8 +1,9 @@
 using AutoServiceManager.Api.Data;
-using Microsoft.EntityFrameworkCore;
+using AutoServiceManager.Api.Middleware;
 using AutoServiceManager.Api.Services;
 using AutoServiceManager.Api.Services.Interfaces;
-using AutoServiceManager.Api.Middleware;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,15 @@ builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 builder.Services.AddScoped<IOperationService, OperationService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "AutoService Manager API",
+        Version = "v1",
+        Description = "ASP.NET Core Web API for managing automotive customers, vehicles, technicians, service orders, and repair operations."
+    });
+});
 
 var app = builder.Build();
 
