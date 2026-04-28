@@ -189,7 +189,7 @@ Create an operation:
 }
 How to Run Locally
 Clone the repository.
-git clone https://github.com/YOUR-USERNAME/autoservice-manager-api.git
+git clone https://github.com/lasantosX/AutoServiceManager.Api.git
 Open the solution in Visual Studio.
 Restore NuGet packages.
 dotnet restore
